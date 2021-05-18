@@ -1,0 +1,8 @@
+<menu>
+    <VPN>
+	<OpenVPN>
+        <Multihop cssClass="fa fa-lock fa-fw" url="/ui/multihop">
+        </Multihop>
+    	</OpenVPN>
+    </VPN>
+</menu>

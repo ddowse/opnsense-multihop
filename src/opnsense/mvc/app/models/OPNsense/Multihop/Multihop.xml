@@ -1,0 +1,24 @@
+<model>
+    <mount>//OPNsense/multihop</mount>
+    <description>
+        Multihop config
+    </description>
+    <items>
+        <Enabled type="BooleanField">
+            <default>1</default>
+            <Required>Y</Required>
+        </Enabled>
+        <clients>
+            <client type="ArrayField">
+                <vpnid type="IntegerField">
+                    <Required>Y</Required>
+                    <ValidationMessage>Not working</ValidationMessage> 
+                </vpnid>
+                <description type="TextField">
+                    <ValidationMessage>Not working</ValidationMessage> 
+                    <Required>N</Required>
+                </description>
+            </client>
+        </clients>
+    </items>
+</model>

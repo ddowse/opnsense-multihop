@@ -1,0 +1,12 @@
+<form>
+    <field>
+        <id>client.vpnid</id>
+        <label>VPNID</label>
+        <type>dropdown</type>
+        <help>Enable this Client</help>
+    </field>
+    <field>
+        <id>client.description</id>
+        <type>hidden</type>
+    </field>
+</form>

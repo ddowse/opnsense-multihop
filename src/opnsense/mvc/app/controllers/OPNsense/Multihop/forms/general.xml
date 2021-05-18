@@ -1,0 +1,8 @@
+<form>
+    <field>
+        <id>multihop.Enabled</id>
+        <label>Enable</label>
+        <type>checkbox</type>
+        <help>Enable this service</help>
+    </field>
+</form>
