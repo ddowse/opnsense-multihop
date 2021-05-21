@@ -1,1 +1,2 @@
-multihop.conf:/usr/local/etc/openvpn-multihop/multihop.conf
+multihop.conf:/usr/local/etc/multihop.conf
+rc.conf.d:/etc/rc.conf.d/multihop

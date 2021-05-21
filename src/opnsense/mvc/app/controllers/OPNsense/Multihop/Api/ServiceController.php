@@ -1,7 +1,7 @@
 <?php
 
 /**
- *    Copyright (C) 2015 Deciso B.V.
+ *    Copyright (C) 2021 Daniel Dowse <dev@daemonbytes.net>
  *
  *    All rights reserved.
  *
@@ -32,14 +32,11 @@ namespace OPNsense\Multihop\Api;
 
 use OPNsense\Base\ApiMutableServiceControllerBase;
 use OPNsense\Core\Backend;
-use OPNsense\Multihop\General;
 
 class ServiceController extends ApiMutableServiceControllerBase
 {
-    
     protected static $internalServiceClass = '\OPNsense\Multihop\Multihop';
     protected static $internalServiceTemplate = 'OPNsense/Multihop';
-    // casesensitive! 
-    protected static $internalServiceEnabled = 'Enabled';
+    protected static $internalServiceEnabled = 'general.enabled';
     protected static $internalServiceName = 'multihop';
 }

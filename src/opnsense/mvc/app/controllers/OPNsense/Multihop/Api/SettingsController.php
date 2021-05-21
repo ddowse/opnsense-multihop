@@ -1,7 +1,7 @@
 <?php
 
 /**
- *    Copyright (C) 2015-2019 Deciso B.V.
+ *    Copyright (C) 2021 Daniel Dowse <dev@daemonbytes.net>
  *
  *    All rights reserved.
  *
@@ -28,19 +28,10 @@
  *
  */
 
-
 namespace OPNsense\Multihop\Api;
 
-require_once("plugins.inc.d/openvpn.inc");
-require_once("guiconfig.inc");
-
-use OPNsense\Base\ApiControllerBase;
-use OPNsense\Multihop\Multihop;
-use OPNsense\Base\UserException;
-use OPNsense\Core\Config;
-use OPNsense\Core\Backend;
-
 use \OPNsense\Base\ApiMutableModelControllerBase;
+use OPNsense\Core\Config;
 
 class SettingsController extends ApiMutableModelControllerBase
 
@@ -76,5 +67,20 @@ class SettingsController extends ApiMutableModelControllerBase
     public function toggleItemAction($uuid, $enabled = null)
     {
         return $this->toggleBase("clients.client", $uuid, $enabled);
+    }
+
+    public function getActiveClientsAction()
+    {
+        $result = array();
+        if ($this->request->isGet()) {
+            if (isset(Config::getInstance()->object()->openvpn)) {
+                foreach (Config::getInstance()->object()->openvpn->children() as $key => $value ) {
+                     if ($key == 'openvpn-client') {
+                      $result[] = $value;
+                  }
+                }
+            }
+        return $result;
+        }
     }
 }

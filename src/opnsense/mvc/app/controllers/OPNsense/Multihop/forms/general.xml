@@ -1,6 +1,6 @@
 <form>
     <field>
-        <id>multihop.Enabled</id>
+        <id>multihop.general.enabled</id>
         <label>Enable</label>
         <type>checkbox</type>
         <help>Enable this service</help>

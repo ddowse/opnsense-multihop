@@ -1,8 +1,37 @@
 <script>
+
+/**
+ *    Copyright (C) 2021 Daniel Dowse <dev@daemonbytes.net>
+ *
+ *    All rights reserved.
+ *
+ *    Redistribution and use in source and binary forms, with or without
+ *    modification, are permitted provided that the following conditions are met:
+ *
+ *    1. Redistributions of source code must retain the above copyright notice,
+ *       this list of conditions and the following disclaimer.
+ *
+ *    2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *
+ *    THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
+ *    INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ *    AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ *    AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
+ *    OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ *    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ *    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ *    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *    POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
     $( document ).ready(function() {
         $("#grid-clients").UIBootgrid(
             {   search:'/api/multihop/settings/searchItem/',
-                get:'/api/multihop/settings/get/',
+                get:'/api/multihop/settings/getActiveClients/',
                 set:'/api/multihop/settings/setItem/',
                 add:'/api/multihop/settings/addItem/',
                 del:'/api/multihop/settings/delItem/',
@@ -11,7 +40,7 @@
         );
 
         //  Get active opnvpn clients and create a select list
-        ajaxGet('/api/multihop/client/getActive/', {}, function(data, status){
+        ajaxGet('/api/multihop/settings/getActiveClients/', {}, function(data, status){
             $.each(data, function (idx, record) {
                 var client_vpnid=$("<option/>").val(record.vpnid).text(record.description);
                 client_vpnid.data('presets', record);
@@ -31,28 +60,23 @@
         });
 
 
-        $(function() {
-            var data_get_map = {'frm_general_settings':"/api/multihop/general/get"};
-            mapDataToFormUI(data_get_map).done(function(data){
-                formatTokenizersUI();
-                $('.selectpicker').selectpicker('refresh');
-            });
-
-            updateServiceControlUI('multihop');
-
-            $("#saveAct").click(function(){
-                saveFormToEndpoint(url="/api/multihop/general/set", formid='frm_general_settings',callback_ok=function()
-                    {
-                        $("#saveAct_progress").addClass("fa fa-spinner fa-pulse");
-                        ajaxCall(url="/api/multihop/service/reconfigure", sendData={}, callback=function(data,status) 
-                            {
-                            updateServiceControlUI('multihop');
-                            $("#saveAct_progress").removeClass("fa fa-spinner fa-pulse");
-                        });
-                    });
-            });
+        $("#reconfigureAct").SimpleActionButton({
+            onPreAction: function() {
+                const dfObj = new $.Deferred();
+                saveFormToEndpoint("/api/multihop/settings/set", 'frm_general_settings', function(){
+                    dfObj.resolve();
+                });
+                return dfObj;
+            }
         });
 
+        updateServiceControlUI('multihop');
+
+        let data_get_map = {'frm_general_settings':"/api/multihop/settings/get"};
+        mapDataToFormUI(data_get_map).done(function(data){
+            formatTokenizersUI();
+            $('.selectpicker').selectpicker('refresh');
+        });
     });
 
 </script>
@@ -67,8 +91,18 @@
         <div class="content-box" style="padding-bottom: 1.5em;">
             {{ partial("layout_partials/base_form",['fields':generalForm,'id':'frm_general_settings'])}}
             <div class="col-md-12">
-                <hr />
-                <button class="btn btn-primary" id="saveAct" type="button"><b>{{ lang._('Save') }}</b> <i id="saveAct_progress"></i></button>
+                <div id="multihopChangeMessage" class="alert alert-info" style="display: none" role="alert">
+                    {{ lang._('After changing settings, please remember to apply them with the button below') }}
+                </div>
+                <hr/>
+                <button class="btn btn-primary" id="reconfigureAct"
+                                                data-endpoint='/api/multihop/service/reconfigure'
+                                                data-label="{{ lang._('Apply') }}"
+                                                data-service-widget="multihop"
+                                                data-error-title="{{ lang._('Error reconfiguring multihop') }}"
+                                                type="button"
+                                                ></button>
+                <br/><br/>
             </div>
         </div>
     </div>
