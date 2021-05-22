@@ -1,0 +1,23 @@
+#!/bin/sh
+
+# PROVIDE: multihop
+# REQUIRE: NETWORKING SERVERS
+# BEFORE: DAEMON
+# KEYWORD: shutdown
+
+. /etc/rc.subr
+
+name="multihop"
+rcvar=multihop_enable
+
+command="/usr/local/opnsense/scripts/OPNsense/Multihop/multihop.sh"
+pidfile=${multihop_pidfile}
+
+start_cmd="${command} start"
+
+load_rc_config $name
+
+: ${multihop_enable="NO"}
+: ${multihop_pidfile="/var/run/${name}.pid"}
+
+run_rc_command "$1"
