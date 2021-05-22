@@ -25,7 +25,7 @@ The VPN Clients that are used for mutlihopping should be disabled in OpenVPN->Cl
 startup on reboot as this is the default. There is no autostart after reboot yet. You will also have 
 to take care of the NAT and Filter settings. Some examples can be found in my other repo [pfSense-pkg-openvpn-multihop](https://github.com/ddowse/pfSense-pkg-openvpn-multihop). 
 
-You can also start the tunnel cascade on the shell like this:
+You can also control the tunnel cascade on the shell like this:
 
 ```bash
 configctl multihop [stop|start|status]
