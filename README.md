@@ -17,10 +17,10 @@ make package
 
 Install Instructions
 
-Copy the Package from the work/pkg directiory to your local testing opnsense and run
+Copy the Package from the work/pkg directory to your local testing opnsense and run
 
 ``` bash
-pkg add os-openvpn-multihop-0.2-BETA.txz
+pkg install os-openvpn-multihop-$VERSION.txz
 ```
 
 The VPN Clients that are used for mutlihopping should be disabled in OpenVPN->Client or they will 
