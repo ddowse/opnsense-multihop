@@ -1,5 +1,5 @@
 #!/bin/sh 
-set -x
+#set -x
 # Copyright (C) 2021 Daniel Dowse <dev@daemonbytes.net>
 
 # All rights reserved.
@@ -31,7 +31,7 @@ IFS=$'\n'
 CONF=/usr/local/etc//multihop.conf
 CCOUNT=$(cat $CONF | wc -l)
 COUNT=1
-
+PID=/var/run/multihop.pid
 
 # XXX - in an ideal world server_addr would be saved in config.xml
 # and pulled from the multihop array itself. Probably going
@@ -57,6 +57,9 @@ do
         fi
     fi
 done
+if [ -e $PID ]; then
+rm $PID
+fi
 }
 
 funcSTART() {
@@ -83,7 +86,7 @@ do
     # We bring the tunnel up with and set the routing table
     # so that the next tunnel will be using the previous tunnel
 
-    if [ $CCOUNT -ge $COUNT ]; then
+    if [ $COUNT -le $CCOUNT ]; then
         openvpn --config /var/etc/openvpn/client$i.conf \
         --route-nopull \
         --route-noexec \
@@ -119,24 +122,32 @@ do
                     fi
     fi
 done
+touch $PID
 fi
 }
 
 funcCHECK() {
+if [ -e $PID ]; then
 for i in $( cat $CONF )
 do
     echo "state all" | \
         nc -N -U /var/etc/openvpn/client$i.sock | \
-        grep CONNECTED 
+        grep CONNECTED > /dev/null
 
     if [ $? -gt 0 ]; then
         funcSTOP
-        rm /var/run/multihop.pid
-        echo "Error: Checking Client $i"
-        exit
+        rm $PID
+        echo "Error: Checking Client $i\n"
+	echo "Programm stopped\n"
+        exit 1
     fi
 done
-touch /var/run/multihop.pid
+echo "multihop is running"
+return 0
+else
+echo "multihop is not running"
+return 1
+fi
 }
 
 case $1 in

@@ -1,5 +1,5 @@
 #!/bin/sh
-
+#set -x
 # PROVIDE: multihop
 # REQUIRE: NETWORKING SERVERS
 # BEFORE: DAEMON
@@ -11,13 +11,14 @@ name="multihop"
 rcvar=multihop_enable
 
 command="/usr/local/opnsense/scripts/OPNsense/Multihop/multihop.sh"
-pidfile=${multihop_pidfile}
+pidfile="/var/run/${name}.pid"
 
 start_cmd="${command} start"
+status_cmd="${command} status"
+
 
 load_rc_config $name
 
 : ${multihop_enable="NO"}
-: ${multihop_pidfile="/var/run/${name}.pid"}
 
 run_rc_command "$1"
