@@ -1,5 +1,5 @@
 #!/bin/sh 
-
+set -x
 # Copyright (C) 2021 Daniel Dowse <dev@daemonbytes.net>
 
 # All rights reserved.
@@ -30,6 +30,7 @@
 IFS=$'\n'
 CONF=/usr/local/etc//multihop.conf
 CCOUNT=$(cat $CONF | wc -l)
+COUNT=1
 
 
 # XXX - in an ideal world server_addr would be saved in config.xml
@@ -51,7 +52,7 @@ do
         echo "signal SIGTERM" | \
             nc -N -U /var/etc/openvpn/client$i.sock > /dev/null
 
-        if [ $? ]; then 
+        if [ $? -gt 0 ]; then 
             echo "Error: Killing client $i failed"
         fi
     fi
@@ -68,20 +69,21 @@ else
 
 funcSTOP
 
-COUNT=1
 
 for i in $( cat $CONF )
 do
     # Call the function to get server_addr from config.xml
     # from the next vpn client in your list
-    SRVCOUNT=$(expr $COUNT + 1)
-    funcROUTE $SRVCOUNT
-   
+    COUNT=$( expr $COUNT + 1 )
+    #SRVCOUNT=$(expr $COUNT + 1)
+    funcROUTE $COUNT
+  
+  
     # We use this for all clients but the last
     # We bring the tunnel up with and set the routing table
     # so that the next tunnel will be using the previous tunnel
 
-    if [ $COUNT -lt $CCOUNT ]; then
+    if [ $CCOUNT -ge $COUNT ]; then
         openvpn --config /var/etc/openvpn/client$i.conf \
         --route-nopull \
         --route-noexec \
@@ -95,7 +97,7 @@ do
             nc -N -U /var/etc/openvpn/client$i.sock | \
             grep CONNECTED  > /dev/null
 
-           if [ $? ]; then
+           if [ $? -gt 0 ]; then
                echo "Error: Initial client $i failed to start"
                funcSTOP
                exit
@@ -110,7 +112,7 @@ do
                         nc -N -U /var/etc/openvpn/client$i.sock | \
                         grep CONNECTED 
 
-                    if [ $? ]; then
+                    if [ $? -gt 0 ]; then
                         funcSTOP
                         echo "Error: Next client $i failed to start"
                         exit
@@ -127,7 +129,7 @@ do
         nc -N -U /var/etc/openvpn/client$i.sock | \
         grep CONNECTED 
 
-    if [ $? ]; then
+    if [ $? -gt 0 ]; then
         funcSTOP
         rm /var/run/multihop.pid
         echo "Error: Checking Client $i"
