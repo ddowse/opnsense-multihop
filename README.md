@@ -5,7 +5,7 @@ Multihop with OpenVPN Tunnels on OPNsense
 
 
 
-Check if your provider supports this. Perfect Privacy is known to support at least 4 Tunnel. 
+Check if your provider supports this. [Perfect Privacy](https://www.perfect-privacy.com/en/features/multi-hop-vpn) is known to support at least 4 Tunnel. 
 
 Build Instructions
 
