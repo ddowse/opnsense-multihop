@@ -1,4 +1,4 @@
-#  _Advanced Users only_ 
+#  _Advanced Users only_ BETA
 
 # opnsense-multihop
 Multihop with OpenVPN Tunnels on OPNsense
