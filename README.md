@@ -1,10 +1,11 @@
-# Heavy TESTING do not use, yet! 
+#  _Advanced Users only_ 
 
 # opnsense-multihop
 Multihop with OpenVPN Tunnels on OPNsense
 
-For testing purpose. Advanced Users only. Check if your provider supports this. 
-Perfect Privacy is known to support at least 4 Tunnel. 
+
+
+Check if your provider supports this. Perfect Privacy is known to support at least 4 Tunnel. 
 
 Build Instructions
 
