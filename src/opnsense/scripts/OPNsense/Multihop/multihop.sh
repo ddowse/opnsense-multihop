@@ -46,6 +46,8 @@ SRVIP=$(pluginctl -g openvpn.openvpn-client | \
 
 #Before we start make sure all tunnels are down
 funcSTOP() {
+
+if [ -e $PID ]; then
 for i in $( cat $CONF )
 do
     if [ -S /var/etc/openvpn/client$i.sock ]; then
@@ -57,8 +59,10 @@ do
         fi
     fi
 done
-if [ -e $PID ]; then
 rm $PID
+echo "stopped"
+else
+echo "multihop not running"
 fi
 }
 
@@ -70,8 +74,13 @@ if [ $CCOUNT -lt 1 ]; then
     exit 1
 else
 
-funcSTOP
-
+for i in $( cat $CONF )
+do
+    if [ -S /var/etc/openvpn/client$i.sock ]; then
+        echo "signal SIGTERM" | \
+            nc -N -U /var/etc/openvpn/client$i.sock > /dev/null
+fi
+done
 
 for i in $( cat $CONF )
 do
@@ -151,8 +160,7 @@ fi
 }
 
 case $1 in
-    start)  funcSTOP
-            funcSTART
+    start)  funcSTART
             funcCHECK
          ;;
     stop)   funcSTOP

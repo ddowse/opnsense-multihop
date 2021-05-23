@@ -11,11 +11,10 @@ name="multihop"
 rcvar=multihop_enable
 
 command="/usr/local/opnsense/scripts/OPNsense/Multihop/multihop.sh"
-pidfile="/var/run/${name}.pid"
 
 start_cmd="${command} start"
+stop_cmd="${command} stop"
 status_cmd="${command} status"
-
 
 load_rc_config $name
 
