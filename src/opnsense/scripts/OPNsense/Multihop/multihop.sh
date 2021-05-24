@@ -95,12 +95,13 @@ do
     # We bring the tunnel up with and set the routing table
     # so that the next tunnel will be using the previous tunnel
 
+    # redirect-gateway this is mandatory or $route_vpn_gateway is empty/not available for
+    # route-up 
+
     if [ $COUNT -le $CCOUNT ]; then
         openvpn --config /var/etc/openvpn/client$i.conf \
         --route-nopull \
         --route-noexec \
-    # redirect-gateway this is mandatory or $route_vpn_gateway is empty/not available for
-    # route-up 
         --redirect-gateway def1 \
         --route-up "/usr/local/opnsense/scripts/OPNsense/Multihop/addroute.sh $SRVIP"
 
