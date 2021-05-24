@@ -1,11 +1,12 @@
-#  _Advanced Users only_ BETA
+#  _Advanced Users only_
 
 # opnsense-multihop
 Multihop with OpenVPN Tunnels on OPNsense
 
 ---
 
-Check if your provider supports this. [Perfect Privacy](https://www.perfect-privacy.com/en/features/multi-hop-vpn) is known to support at least 4 Tunnel. 
+Check if your provider supports this. [Perfect Privacy](https://www.perfect-privacy.com/en/features/multi-hop-vpn) is known to support at least 4 Tunnel.   
+
 
 Build Instructions
 
@@ -66,7 +67,8 @@ Some examples can be found in my other repo [pfSense-pkg-openvpn-multihop](https
 
 ---
 
-You are welcome to open issues (code/errors) or improve this plugin. 
+You are welcome to open issues (code/errors) or improve this plugin. It might be a good idea to mix VPN providers and report your results if you want.
+
 
 The inital idea for VPN Multihopping Plugin was created by a customer who wants to remain anonymous.
 The customer also provided some funds to me to realise his idea for him and the opnsense/vpn community as well. 
