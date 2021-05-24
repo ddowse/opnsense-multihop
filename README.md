@@ -1,6 +1,6 @@
 #  _Advanced Users only_
 
-# opnsense-multihop
+# opnsense-openvpn-multihop
 Multihop with OpenVPN Tunnels on OPNsense
 
 ---
