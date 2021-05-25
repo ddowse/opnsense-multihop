@@ -47,7 +47,7 @@ curl -s https://checkip.perfect-privacy.com/json | jq
 
 ---
 
-# Some simple Technical Information
+# Some simple technical background Information
 
 1. The Plugin will extract the VPNID and creates a list and stores that information in  `/usr/local/etc/multihop.conf`.
 1. The Shellscript `/usr/local/opnsense/scripts/OPNsense/Multihop/multihop.sh` will be executed when the service API triggers `configd`.
