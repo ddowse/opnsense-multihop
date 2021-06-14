@@ -5,4 +5,17 @@
         <type>checkbox</type>
         <help>Enable this service</help>
     </field>
+    <field>
+        <id>multihop.general.autorestart</id>
+        <label>Autorestart</label>
+        <type>checkbox</type>
+        <help>Stop and restart all tunnels if on tunnel seems down</help>
+    </field>
+    <field>
+        <id>multihop.general.route</id>
+        <label>Do not add static route</label>
+        <type>checkbox</type>
+        <help>If checked this will not add a static route entry to the table for the first tunnel. Most likley will break the multihop. Use with caution.</help>
+        <advanced>true</advanced>
+    </field>
 </form>
