@@ -19,7 +19,7 @@ make package
 
 # Install Instructions
 
-Copy the Package from the work/pkg directory to your local testing opnsense and run
+Fetch the pre-release from this repo and install it like
 
 ``` bash
 pkg install os-openvpn-multihop-$VERSION.txz
