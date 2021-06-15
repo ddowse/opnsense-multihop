@@ -1,4 +1,31 @@
-#!/bin/sh
+#!/bin/sh 
+set -x
+# Copyright (C) 2021 Daniel Dowse <dev@daemonbytes.net>
+
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+# 1. Redistributions of source code must retain the above copyright notice,
+#    this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+# 
+# THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
+# INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+# AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+# AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
+# OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#set -x 
+#set -e 
 
 IFS=$'\n'
 CONF=/usr/local/etc//multihop.conf
@@ -6,10 +33,11 @@ CCOUNT=$(cat $CONF | wc -l)
 COUNT=1
 PID=/var/run/multihop.pid
 ROUTE=$(pluginctl -g OPNsense.multihop | jq '.general.setroute' | tr -d \")
+AUTO=$(pluginctl -g OPNsense.multihop | jq '.general.autorestart' | tr -d \")
 
 # XXX - in an ideal world server_addr would be saved in config.xml
 # and pulled from the multihop array itself. Probably going
-# to change this.
+# to change this. 
 
 funcDFLTROUTE() {
         DFL_ROUTE=$(netstat -4nr | grep default | awk '{ print $2}')
@@ -34,7 +62,7 @@ do
         echo "signal SIGTERM" | \
             nc -N -U /var/etc/openvpn/client$i.sock > /dev/null
 
-        if [ $? -gt 0 ]; then
+        if [ $? -gt 0 ]; then 
             echo "Error: Killing client $i failed"
         fi
     fi
@@ -79,7 +107,7 @@ do
     # so that the next tunnel will be using the previous tunnel
 
     # redirect-gateway this is mandatory or $route_vpn_gateway is empty/not available for
-    # route-up
+    # route-up 
 
 #   route add -host $(grep remote /var/etc/openvpn/client$i.conf | cuf -f 2 -d " ")
 
@@ -87,7 +115,7 @@ do
         openvpn --config /var/etc/openvpn/client$i.conf \
         --route-nopull \
         --route-noexec \
-	--redirect-gateway def1 \
+    	--redirect-gateway def1 \
         --route-up "/usr/local/opnsense/scripts/OPNsense/Multihop/addroute.sh $SRVIP"
 
         # lets wait some seconds to establish the connection
@@ -104,15 +132,15 @@ do
                exit
            fi
        else
-        # This should run when all other tunnels are up and
-        # will use the options in config.xml / WebGUI
+        # This should run when all other tunnels are up and 
+        # will use the options in config.xml / WebGUI 
         openvpn --config /var/etc/openvpn/client$i.conf \
-	--redirect-gateway def1
+    	--redirect-gateway def1
         sleep 5;
 
                     echo "state all" | \
                         nc -N -U /var/etc/openvpn/client$i.sock | \
-                        grep CONNECTED
+                        grep CONNECTED 
 
                     if [ $? -gt 0 ]; then
                         funcSTOP
@@ -123,10 +151,11 @@ do
 done
 touch $PID
 
+if [ $AUTO -eq 1 ]; then
 dpinger -o /dev/null -S -L 35% \
 -C "/usr/local/opnsense/scripts/OPNsense/multihop restart" \
 -p /var/run/dpinger-multihop.pid $SRVIP
-
+fi 
 fi
 }
 
@@ -166,7 +195,8 @@ case $1 in
             ;;
     status) funcCHECK
             ;;
-    *)  echo "No Command given"
+    *)  echo "No Command given" 
         echo "start/stop/restart"
         ;;
 esac
+
