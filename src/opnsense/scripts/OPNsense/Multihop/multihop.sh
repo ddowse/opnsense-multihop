@@ -1,5 +1,5 @@
 #!/bin/sh 
-set -x
+#set -x
 # Copyright (C) 2021 Daniel Dowse <dev@daemonbytes.net>
 
 # All rights reserved.
@@ -24,8 +24,6 @@ set -x
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-#set -x 
-#set -e 
 
 IFS=$'\n'
 CONF=/usr/local/etc//multihop.conf
