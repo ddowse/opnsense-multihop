@@ -40,9 +40,15 @@ AUTO=$(pluginctl -g OPNsense.multihop | jq '.general.autorestart' | tr -d \")
 # to change this. 
 
 funcDFLTROUTE() {
+        echo $1
         DFL_ROUTE=$(netstat -4nr | grep default | awk '{ print $2}')
+        if [ $1 == "set" ];then
         funcSRVIP 1
         route add -host $SRVIP $DFL_ROUTE
+        else
+        funcSRVIP 1
+        route del -host $SRVIP $DFL_ROUTE
+        fi
     }
 
 funcSRVIP() {
@@ -54,7 +60,9 @@ SRVIP=$(pluginctl -g openvpn.openvpn-client | \
 
 #Before we start make sure all tunnels are down
 funcSTOP() {
+if [ -e  /var/run/dpinger-multihop.pid ]; then
 kill $(cat /var/run/dpinger-multihop.pid)
+fi
 if [ -e $PID ]; then
 for i in $( cat $CONF )
 do
@@ -68,6 +76,7 @@ do
     fi
 done
 rm $PID
+funcSRVIP 
 echo "stopped"
 else
 echo "multihop not running"
@@ -99,7 +108,7 @@ do
     funcSRVIP $COUNT
 
     if [ $ROUTE -eq 1 ]; then
-        funcDFLTROUTE
+        funcDFLTROUTE "set"
     fi
 
     # We use this for all clients but the last
