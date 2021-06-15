@@ -49,6 +49,7 @@
 
             // Initial set of "client.description" field
             var opt = $("#client\\.vpnid").find('option:selected').text();
+            $('tr[id="row_client.description"]').addClass('hidden');
             $("#client\\.description").val(opt);
             $("#client\\.vpnid").selectpicker('refresh');
         });
