@@ -19,10 +19,10 @@ make package
 
 # Install Instructions
 
-Fetch the pre-release from this repo and install it like
+Fetch the current pre-release from this repo and install it like this
 
 ``` bash
-pkg install os-openvpn-multihop-$VERSION.txz
+pkg add https://github.com/ddowse/opnsense-multihop/releases/download/testing/os-openvpn-multihop-0.6.txz
 ```
 
 # Usage
@@ -62,7 +62,7 @@ The OPNsense OpenVPN Client Configuration is not touched. Altough VPN Clients th
 startup on reboot, too - as this is the default.
 
 
-You **may** also have to take care of *NAT and Filter settings*.   
+You **may** also **want** take care of *NAT and Filter settings*.   
 Some examples can be found in my other repo [pfSense-pkg-openvpn-multihop](https://github.com/ddowse/pfSense-pkg-openvpn-multihop). 
 
 ---
