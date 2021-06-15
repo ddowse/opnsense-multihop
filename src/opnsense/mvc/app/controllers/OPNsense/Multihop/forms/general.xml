@@ -12,10 +12,10 @@
         <help>Stop and restart all tunnels if on tunnel seems down</help>
     </field>
     <field>
-        <id>multihop.general.route</id>
+        <id>multihop.general.setroute</id>
         <label>Do not add static route</label>
         <type>checkbox</type>
-        <help>If checked this will not add a static route entry to the table for the first tunnel. Most likley will break the multihop. Use with caution.</help>
+        <help>If unchecked no static route entry will be added. Use only if you know what you are doing.</help>
         <advanced>true</advanced>
     </field>
 </form>
