@@ -27,12 +27,6 @@ pkg install os-openvpn-multihop-$VERSION.txz
 
 # Usage
 
-1. Go to OpenVPN->Clients and add at least 2 Clients
-2. Go to System->Routes->Configuration and add the `Remote IP` of the first Tunnel in the cascade to the Static Routing Table and choose your WAN Gateway as Gatway e.g `85.17.28.145/32 -> Gateway 192.168.1.1` 
-3. Go to OpenVPN->Multihop->Tab Clients and add your Clients.
-4. Click the Start Button on the top right. 
-5. Check your Routing Table, you should see something like `80.255.7.98 -> 10.3.0.1` this indicates that all traffic to the host will be going to the VPN Gateway.
-
 You can also control the tunnel cascade on the shell like this:
 
 ```bash
