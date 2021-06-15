@@ -30,11 +30,10 @@
 
 namespace OPNsense\Multihop\Api;
 
-use \OPNsense\Base\ApiMutableModelControllerBase;
+use OPNsense\Base\ApiMutableModelControllerBase;
 use OPNsense\Core\Config;
 
 class SettingsController extends ApiMutableModelControllerBase
-
 {
     protected static $internalModelName = 'multihop';
     protected static $internalModelClass = 'OPNsense\Multihop\Multihop';
@@ -51,7 +50,7 @@ class SettingsController extends ApiMutableModelControllerBase
 
     public function addItemAction()
     {
-        return $this->addBase("client","clients.client");
+        return $this->addBase("client", "clients.client");
     }
 
     public function getItemAction($uuid = null)
@@ -74,13 +73,13 @@ class SettingsController extends ApiMutableModelControllerBase
         $result = array();
         if ($this->request->isGet()) {
             if (isset(Config::getInstance()->object()->openvpn)) {
-                foreach (Config::getInstance()->object()->openvpn->children() as $key => $value ) {
-                     if ($key == 'openvpn-client') {
-                      $result[] = $value;
-                  }
+                foreach (Config::getInstance()->object()->openvpn->children() as $key => $value) {
+                    if ($key == 'openvpn-client') {
+                        $result[] = $value;
+                    }
                 }
             }
-        return $result;
+            return $result;
         }
     }
 }

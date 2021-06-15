@@ -1,4 +1,5 @@
 <?php
+
 /**
  *    Copyright (C) 2021 Daniel Dowse <dev@daemonbytes.net>
  *

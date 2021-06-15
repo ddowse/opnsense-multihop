@@ -1,4 +1,5 @@
 <?php
+
 /**
  *    Copyright (C) 2021 Daniel Dowse <dev@daemonbytes.net>
  *
@@ -34,4 +35,3 @@ use OPNsense\Base\BaseModel;
 class Multihop extends BaseModel
 {
 }
-

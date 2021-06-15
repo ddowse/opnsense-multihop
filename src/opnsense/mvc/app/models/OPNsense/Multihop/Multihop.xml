@@ -24,7 +24,7 @@
                     <required>Y</required>
                 </vpnid>
                 <description type="TextField">
-                    <ValidationMessage>Not working</ValidationMessage> 
+                    <ValidationMessage>Not working</ValidationMessage>
                     <Required>N</Required>
                 </description>
             </client>

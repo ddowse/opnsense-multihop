@@ -47,15 +47,15 @@
                 $("#client\\.vpnid").append(client_vpnid);
             });
 
-            // Initial set of "client.description" field 
-            var opt = $("#client\\.vpnid").find('option:selected').text(); 
+            // Initial set of "client.description" field
+            var opt = $("#client\\.vpnid").find('option:selected').text();
             $("#client\\.description").val(opt);
             $("#client\\.vpnid").selectpicker('refresh');
         });
 
         // Change the value of "client.description" to new on change of option
         $(document).on('change', 'select', function() {
-            var opt = $(this).find('option:selected').text(); 
+            var opt = $(this).find('option:selected').text();
             $("#client\\.description").val(opt);
         });
 
