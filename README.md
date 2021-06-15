@@ -27,6 +27,12 @@ pkg install os-openvpn-multihop-$VERSION.txz
 
 # Usage
 
+![General Tab](screen2.png)
+
+
+
+![Clients Tab](screen1.png)
+
 You can also control the tunnel cascade on the shell like this:
 
 ```bash
