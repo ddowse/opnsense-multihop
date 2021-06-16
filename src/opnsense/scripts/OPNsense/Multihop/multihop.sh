@@ -1,5 +1,5 @@
 #!/bin/sh 
-#set -x
+set -x
 # Copyright (C) 2021 Daniel Dowse <dev@daemonbytes.net>
 
 # All rights reserved.
@@ -26,17 +26,16 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 IFS=$'\n'
+
 CONF=/usr/local/etc//multihop.conf
-CCOUNT=$(cat $CONF | wc -l)
+CCOUNT=$(cat $CONF | wc -l | tr -d " ")
 COUNT=1
 PID=/var/run/multihop.pid
+
 ROUTE=$(pluginctl -g OPNsense.multihop | jq '.general.setroute' | tr -d \")
 AUTO=$(pluginctl -g OPNsense.multihop | jq '.general.autorestart' | tr -d \")
 
-# XXX - in an ideal world server_addr would be saved in config.xml
-# and pulled from the multihop array itself. Probably going
-# to change this. 
-
+#Set static route
 funcDFLTROUTE() {
         echo $1
         DFL_ROUTE=$(netstat -4nr | grep default | awk '{ print $2}')
@@ -49,6 +48,7 @@ funcDFLTROUTE() {
         fi
     }
 
+#Return server_addr from config.xml by vpnid
 funcSRVIP() {
 SRVIP=$(pluginctl -g openvpn.openvpn-client | \
         jq '.[] | select(.vpnid=="'$(sed -n ''"$1"'p' $CONF)'")' | \
@@ -56,12 +56,14 @@ SRVIP=$(pluginctl -g openvpn.openvpn-client | \
         tr -d \")
 }
 
-#Before we start make sure all tunnels are down
+#Stop all tunnels
 funcSTOP() {
-if [ -e  /var/run/dpinger-multihop.pid ]; then
-kill $(cat /var/run/dpinger-multihop.pid)
-fi
-if [ -e $PID ]; then
+funcDFLTROUTE
+for pid in $(ls /var/run/dpinger-multihop*)
+do
+kill $(cat $pid)
+done
+
 for i in $( cat $CONF )
 do
     if [ -S /var/etc/openvpn/client$i.sock ]; then
@@ -73,8 +75,8 @@ do
         fi
     fi
 done
+if [ -e $PID ]; then
 rm $PID
-funcSRVIP 
 echo "stopped"
 else
 echo "multihop not running"
@@ -99,26 +101,18 @@ done
 
 for i in $( cat $CONF )
 do
-    # Call the function to get server_addr from config.xml
-    # from the next vpn client in your list
     COUNT=$( expr $COUNT + 1 )
-    #SRVCOUNT=$(expr $COUNT + 1)
-    funcSRVIP $COUNT
+
+
+    # Set the first tunnel + static route if enabled
+    if [ $COUNT -le $CCOUNT ]; then
 
     if [ $ROUTE -eq 1 ]; then
         funcDFLTROUTE "set"
     fi
 
-    # We use this for all clients but the last
-    # We bring the tunnel up with and set the routing table
-    # so that the next tunnel will be using the previous tunnel
+    funcSRVIP $COUNT
 
-    # redirect-gateway this is mandatory or $route_vpn_gateway is empty/not available for
-    # route-up 
-
-#   route add -host $(grep remote /var/etc/openvpn/client$i.conf | cuf -f 2 -d " ")
-
-    if [ $COUNT -le $CCOUNT ]; then
         openvpn --config /var/etc/openvpn/client$i.conf \
         --route-nopull \
         --route-noexec \
@@ -139,9 +133,10 @@ do
                exit
            fi
        else
-        # This should run when all other tunnels are up and 
-        # will use the options in config.xml / WebGUI 
+
+        # Start next tunnel 
         openvpn --config /var/etc/openvpn/client$i.conf \
+        --route-nopull \
     	--redirect-gateway def1
         sleep 5;
 
@@ -157,12 +152,16 @@ do
     fi
 done
 touch $PID
-
 if [ $AUTO -eq 1 ]; then
-dpinger -o /dev/null -S -L 35% \
--C "/usr/local/opnsense/scripts/OPNsense/multihop restart" \
--p /var/run/dpinger-multihop.pid $SRVIP
-fi 
+    DPING=$(netstat -4nr | grep ovpnc | grep UGS | awk '{ print $2 }'\
+        | sort -u)
+    for gw in $DPING
+    do 
+	dpinger -o /dev/null -S -L 35% \
+	-C "/usr/local/opnsense/scripts/OPNsense/Multihop/multihop.sh restart" \
+	-p /var/run/dpinger-multihop-`echo $gw | sed 's/\./-/g'`.pid $gw
+    done    
+	fi 
 fi
 }
 
