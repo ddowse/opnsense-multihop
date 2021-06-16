@@ -34,38 +34,35 @@ PID=/var/run/multihop.pid
 
 ROUTE=$(pluginctl -g OPNsense.multihop | jq '.general.setroute' | tr -d \")
 AUTO=$(pluginctl -g OPNsense.multihop | jq '.general.autorestart' | tr -d \")
+DFL_ROUTE=$(netstat -4nr | grep default | awk '{ print $2}')
 
 #Set static route
 funcDFLTROUTE() {
-        echo $1
-        DFL_ROUTE=$(netstat -4nr | grep default | awk '{ print $2}')
-        if [ $1 == "set" ];then
-        funcSRVIP 1
-        route add -host $SRVIP $DFL_ROUTE
-        else
-        funcSRVIP 1
-        route del -host $SRVIP $DFL_ROUTE
-        fi
-    }
+  if [ "$1" == "set" ];then
+   funcSRVIP 1
+   route add -host $SRVIP/32 $DFL_ROUTE
+  else
+   funcSRVIP 1
+   route del -host $SRVIP/32 $DFL_ROUTE
+  fi
+}
 
 #Return server_addr from config.xml by vpnid
 funcSRVIP() {
-SRVIP=$(pluginctl -g openvpn.openvpn-client | \
-        jq '.[] | select(.vpnid=="'$(sed -n ''"$1"'p' $CONF)'")' | \
-        jq '.server_addr' | \
-        tr -d \")
+ SRVIP=$(pluginctl -g openvpn.openvpn-client | \
+  jq '.[] | select(.vpnid=="'$(sed -n ''"$1"'p' $CONF)'")' | \
+  jq '.server_addr' | tr -d \")
 }
 
 #Stop all tunnels
 funcSTOP() {
-funcDFLTROUTE
-for pid in $(ls /var/run/dpinger-multihop*)
-do
-kill $(cat $pid)
-done
+ for pid in $(ls /var/run/dpinger-multihop*)
+  do
+   kill $(cat $pid)
+ done
 
-for i in $( cat $CONF )
-do
+  for i in $(cat $CONF)
+   do
     if [ -S /var/etc/openvpn/client$i.sock ]; then
         echo "signal SIGTERM" | \
             nc -N -U /var/etc/openvpn/client$i.sock > /dev/null
@@ -75,6 +72,7 @@ do
         fi
     fi
 done
+funcDFLTROUTE
 if [ -e $PID ]; then
 rm $PID
 echo "stopped"
@@ -91,19 +89,17 @@ if [ $CCOUNT -lt 1 ]; then
     exit 1
 else
 
-for i in $( cat $CONF )
-do
-    if [ -S /var/etc/openvpn/client$i.sock ]; then
-        echo "signal SIGTERM" | \
-            nc -N -U /var/etc/openvpn/client$i.sock > /dev/null
-fi
-done
+#for i in $( cat $CONF )
+#do
+#    if [ -S /var/etc/openvpn/client$i.sock ]; then 
+#        echo "signal SIGTERM" | \
+#        nc -N -U /var/etc/openvpn/client$i.sock > /dev/null
+#    fi
+#done
 
-for i in $( cat $CONF )
+for i in $(cat $CONF)
 do
     COUNT=$( expr $COUNT + 1 )
-
-
     # Set the first tunnel + static route if enabled
     if [ $COUNT -le $CCOUNT ]; then
 
@@ -160,8 +156,8 @@ if [ $AUTO -eq 1 ]; then
 	dpinger -o /dev/null -S -L 35% \
 	-C "/usr/local/opnsense/scripts/OPNsense/Multihop/multihop.sh restart" \
 	-p /var/run/dpinger-multihop-`echo $gw | sed 's/\./-/g'`.pid $gw
-    done    
-	fi 
+    done
+	fi
 fi
 }
 
@@ -175,7 +171,6 @@ do
 
     if [ $? -gt 0 ]; then
         funcSTOP
-        rm $PID
         echo "Error: Checking Client $i\n"
 	echo "Programm stopped\n"
         exit 1
