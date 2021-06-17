@@ -1,5 +1,5 @@
 PLUGIN_NAME=		openvpn-multihop
-PLUGIN_VERSION=		0.8
+PLUGIN_VERSION=		0.9
 PLUGIN_COMMENT=		OpenVPN Multihop 
 PLUGIN_MAINTAINER=	dev@daemonbytes.net
 PLUGIN_DEPENDS=		openvpn jq
