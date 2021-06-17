@@ -22,7 +22,7 @@ make package
 Fetch the current pre-release from this repo and install it like this
 
 ``` bash
-pkg add https://github.com/ddowse/opnsense-multihop/releases/download/testing/os-openvpn-multihop-0.8.txz
+pkg add https://github.com/ddowse/opnsense-multihop/releases/download/testing/os-openvpn-multihop-0.9.txz
 ```
 
 # Usage
