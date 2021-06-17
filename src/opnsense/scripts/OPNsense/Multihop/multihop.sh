@@ -1,5 +1,5 @@
 #!/bin/sh 
-set -x
+#set -x
 # Copyright (C) 2021 Daniel Dowse <dev@daemonbytes.net>
 
 # All rights reserved.
@@ -25,94 +25,115 @@ set -x
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-IFS=$'\n'
-
-CONF=/usr/local/etc//multihop.conf
-CCOUNT=$(cat $CONF | wc -l | tr -d " ")
+VPNID=$(pluginctl -g OPNsense.multihop | jq -r '.[].client[]? | .vpnid')
+ROUTE=$(pluginctl -g OPNsense.multihop | jq -r '.general.setroute')
+AUTO=$(pluginctl -g OPNsense.multihop | jq -r '.general.autorestart')
+DFL_ROUTE=$(netstat -4nr | grep default | awk '{ print $2}')
+HOPS=$(echo $VPNID | wc -w)
 COUNT=1
 PID=/var/run/multihop.pid
 
-ROUTE=$(pluginctl -g OPNsense.multihop | jq '.general.setroute' | tr -d \")
-AUTO=$(pluginctl -g OPNsense.multihop | jq '.general.autorestart' | tr -d \")
-DFL_ROUTE=$(netstat -4nr | grep default | awk '{ print $2}')
+func_addroute() {
+    func_nexthopip $1
+    route add -host $SRVIP $DFL_ROUTE
+}
 
-#Set static route
-funcDFLTROUTE() {
-  if [ "$1" == "set" ];then
-   funcSRVIP 1
-   route add -host $SRVIP/32 $DFL_ROUTE
-  else
-   funcSRVIP 1
-   route del -host $SRVIP/32 $DFL_ROUTE
-  fi
+func_delroute() {
+    func_nexthopip $1
+    route del -host $SRVIP $DFL_ROUTE
 }
 
 #Return server_addr from config.xml by vpnid
-funcSRVIP() {
- SRVIP=$(pluginctl -g openvpn.openvpn-client | \
-  jq '.[] | select(.vpnid=="'$(sed -n ''"$1"'p' $CONF)'")' | \
-  jq '.server_addr' | tr -d \")
-}
+func_nexthopip() {
+    SRVIP=$(pluginctl -g openvpn.openvpn-client | \
+        jq '.[] | select(.vpnid=="'$1'")' | jq -r '.server_addr')
+    }
 
 #Stop all tunnels
-funcSTOP() {
- for pid in $(ls /var/run/dpinger-multihop*)
-  do
-   kill $(cat $pid)
- done
+func_stop() {
+    #XXX this looks buggy
+    for pid in $(ls /var/run/dpinger-multihop*)
+    do
+        kill $(cat $pid)
+    done
 
-  for i in $(cat $CONF)
-   do
-    if [ -S /var/etc/openvpn/client$i.sock ]; then
-        echo "signal SIGTERM" | \
-            nc -N -U /var/etc/openvpn/client$i.sock > /dev/null
+    for ID in $VPNID
+    do
+        if [ -S /var/etc/openvpn/client$ID.sock ]; then
+            echo "signal SIGTERM" | \
+                nc -N -U /var/etc/openvpn/client$ID.sock > /dev/null
 
-        if [ $? -gt 0 ]; then 
-            echo "Error: Killing client $i failed"
+            if [ $? -gt 0 ]; then 
+                echo "Error: Killing client $ID failed"
+            fi
         fi
+    done
+
+    #XXX this could lead to problems
+    IP=$( echo $VPNID | awk '{ print $1 }' )
+    func_delroute $IP
+
+    if [ -e $PID ]; then
+        rm $PID
+        echo "stopped"
+    else
+        echo "multihop not running"
     fi
-done
-funcDFLTROUTE
-if [ -e $PID ]; then
-rm $PID
-echo "stopped"
-else
-echo "multihop not running"
-fi
 }
 
-funcSTART() {
+func_check() {
+    if [ -e $PID ]; then
+        for ID in $VPNID
+        do
+            echo "state all" | \
+                nc -N -U /var/etc/openvpn/client$ID.sock | \
+                grep CONNECTED > /dev/null
 
-#TODO forward this to the GUI
-if [ $CCOUNT -lt 1 ]; then
+            if [ $? -gt 0 ]; then
+                func_stop
+                echo "Error: Checking Client $ID"
+                echo "Programm stopped"
+                exit 1
+            fi
+        done
+        echo "multihop is running"
+        return 0
+    else
+        echo "multihop is not running"
+        return 1
+    fi
+}
+
+func_start() {
+
+#TODO forward this to the GUI and check 
+if [ $HOPS -lt 1 ]; then
     echo "Need at least 2 Clients"
     exit 1
 else
 
-#for i in $( cat $CONF )
-#do
-#    if [ -S /var/etc/openvpn/client$i.sock ]; then 
-#        echo "signal SIGTERM" | \
-#        nc -N -U /var/etc/openvpn/client$i.sock > /dev/null
-#    fi
-#done
-
-for i in $(cat $CONF)
-do
-    COUNT=$( expr $COUNT + 1 )
-    # Set the first tunnel + static route if enabled
-    if [ $COUNT -le $CCOUNT ]; then
-
+    # Set static route
     if [ $ROUTE -eq 1 ]; then
-        funcDFLTROUTE "set"
+        IP=$( echo $VPNID | awk '{ print $1 }' )
+        func_addroute $IP
     fi
 
-    funcSRVIP $COUNT
+    #Bring up the tunnels
 
-        openvpn --config /var/etc/openvpn/client$i.conf \
+    for HOP in $VPNID
+    do
+        COUNT=$( expr $COUNT + 1 )
+        IP=$( echo $VPNID | awk '{ print $'"$COUNT"' }' )
+        if [ $COUNT -le $HOPS ]; then
+
+    #Get the IP to pass to --route-up command
+    func_nexthopip $IP
+
+    #Start Tunnel
+    openvpn --config /var/etc/openvpn/client$HOP.conf \
         --route-nopull \
         --route-noexec \
-    	--redirect-gateway def1 \
+        --redirect-gateway def1 \
         --route-up "/usr/local/opnsense/scripts/OPNsense/Multihop/addroute.sh $SRVIP"
 
         # lets wait some seconds to establish the connection
@@ -120,82 +141,64 @@ do
 
         sleep 5;
         echo "state all" | \
-            nc -N -U /var/etc/openvpn/client$i.sock | \
+            nc -N -U /var/etc/openvpn/client$HOP.sock | \
             grep CONNECTED  > /dev/null
 
-           if [ $? -gt 0 ]; then
-               echo "Error: Initial client $i failed to start"
-               funcSTOP
-               exit
-           fi
-       else
+        if [ $? -gt 0 ]; then
+            echo "Error: Initial client $HOP failed to start"
+            func_stop
+        fi
+    else
 
-        # Start next tunnel 
-        openvpn --config /var/etc/openvpn/client$i.conf \
-        --route-nopull \
-    	--redirect-gateway def1
-        sleep 5;
+        #Start last tunnel
+        openvpn --config /var/etc/openvpn/client$HOP.conf \
+            --route-nopull \
+            --redirect-gateway def1
+
+                    sleep 5;
 
                     echo "state all" | \
-                        nc -N -U /var/etc/openvpn/client$i.sock | \
+                        nc -N -U /var/etc/openvpn/client$HOP.sock | \
                         grep CONNECTED 
 
                     if [ $? -gt 0 ]; then
-                        funcSTOP
-                        echo "Error: Next client $i failed to start"
-                        exit
+                        func_stop
+                        echo "Error: Next client $HOP failed to start"
+                        func_stop
                     fi
-    fi
-done
-touch $PID
-if [ $AUTO -eq 1 ]; then
-    DPING=$(netstat -4nr | grep ovpnc | grep UGS | awk '{ print $2 }'\
-        | sort -u)
-    for gw in $DPING
-    do 
-	dpinger -o /dev/null -S -L 35% \
-	-C "/usr/local/opnsense/scripts/OPNsense/Multihop/multihop.sh restart" \
-	-p /var/run/dpinger-multihop-`echo $gw | sed 's/\./-/g'`.pid $gw
+        fi
     done
-	fi
-fi
-}
 
-funcCHECK() {
-if [ -e $PID ]; then
-for i in $( cat $CONF )
-do
-    echo "state all" | \
-        nc -N -U /var/etc/openvpn/client$i.sock | \
-        grep CONNECTED > /dev/null
+    touch $PID
 
-    if [ $? -gt 0 ]; then
-        funcSTOP
-        echo "Error: Checking Client $i\n"
-	echo "Programm stopped\n"
-        exit 1
+    if [ $AUTO -eq 1 ]; then
+        DPING=$(netstat -4nr | grep ovpnc | grep UGS | \
+        awk '{ print $2 }' | sort -u)
+
+      for GW in $DPING
+       do 
+        dpinger -o /dev/null -S -L 35% \
+        -C "/usr/local/opnsense/scripts/OPNsense/Multihop/multihop.sh restart" \
+        -p /var/run/dpinger-multihop-`echo $GW | sed 's/\./-/g'`.pid $GW
+       done
     fi
-done
-echo "multihop is running"
-return 0
-else
-echo "multihop is not running"
-return 1
 fi
+#End Tunnel Function
 }
+
 
 case $1 in
-    start)  funcSTART
-            funcCHECK
-         ;;
-    stop)   funcSTOP
+    start)  func_start
+            func_check
         ;;
-    restart) funcSTOP
-             funcSTART
-             funcCHECK
-            ;;
-    status) funcCHECK
-            ;;
+    stop)   func_stop
+        ;;
+    restart) func_stop
+            func_start
+            func_check
+        ;;
+    status) func_check
+        ;;
     *)  echo "No Command given" 
         echo "start/stop/restart"
         ;;
