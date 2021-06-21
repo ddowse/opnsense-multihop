@@ -153,6 +153,7 @@ else
         #Start last tunnel
         openvpn --config /var/etc/openvpn/client$HOP.conf \
             --route-nopull \
+            --redirect-gateway ipv6 \
             --redirect-gateway def1
 
                     sleep 5;
