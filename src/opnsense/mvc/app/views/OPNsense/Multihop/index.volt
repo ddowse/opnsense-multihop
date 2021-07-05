@@ -1,84 +1,101 @@
 <script>
 
-/**
- *    Copyright (C) 2021 Daniel Dowse <dev@daemonbytes.net>
- *
- *    All rights reserved.
- *
- *    Redistribution and use in source and binary forms, with or without
- *    modification, are permitted provided that the following conditions are met:
- *
- *    1. Redistributions of source code must retain the above copyright notice,
- *       this list of conditions and the following disclaimer.
- *
- *    2. Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in the
- *       documentation and/or other materials provided with the distribution.
- *
- *    THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
- *    INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
- *    AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- *    AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
- *    OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- *    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- *    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- *    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- *    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- *    POSSIBILITY OF SUCH DAMAGE.
- *
- */
+    /**
+    *    Copyright (C) 2021 Daniel Dowse <dev@daemonbytes.net>
+     *
+     *    All rights reserved.
+     *
+     *    Redistribution and use in source and binary forms, with or without
+     *    modification, are permitted provided that the following conditions are met:
+     *
+     *    1. Redistributions of source code must retain the above copyright notice,
+     *       this list of conditions and the following disclaimer.
+     *
+     *    2. Redistributions in binary form must reproduce the above copyright
+     *       notice, this list of conditions and the following disclaimer in the
+     *       documentation and/or other materials provided with the distribution.
+     *
+     *    THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
+     *    INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+     *    AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+     *    AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
+     *    OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+     *    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+     *    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+     *    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+     *    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+     *    POSSIBILITY OF SUCH DAMAGE.
+     *
+     */
 
-    $( document ).ready(function() {
-        $("#grid-clients").UIBootgrid(
-            {   search:'/api/multihop/settings/searchItem/',
-                get:'/api/multihop/settings/getActiveClients/',
-                set:'/api/multihop/settings/setItem/',
-                add:'/api/multihop/settings/addItem/',
-                del:'/api/multihop/settings/delItem/',
-                toggle:'/api/multihop/settings/toggleItem/'
+$( document ).ready(function() {
+    $("#grid-clients").UIBootgrid(
+        {   search:'/api/multihop/settings/searchItem/',
+            get:'/api/multihop/settings/getActiveClients/',
+            set:'/api/multihop/settings/setItem/',
+            add:'/api/multihop/settings/addItem/',
+            del:'/api/multihop/settings/delItem/',
+            toggle:'/api/multihop/settings/toggleItem/',
+            options: {
+                responseHandler: function (response) {
+                    ajaxGet('/api/multihop/settings/getActiveClients/', {}, function(data, status){
+                        // clear select list then populate again
+                        $('select').children().remove();
+                        $.each(data, function (idx, record) {
+                            var client_vpnid=$("<option/>").val(record.vpnid).text(record.description);
+                            client_vpnid.data('presets', record);
+                            $("#client\\.vpnid").append(client_vpnid);
+                            $("#client\\.vpnid").selectpicker('refresh');
+                        });
+                        // set of "client.description" field
+                        var opt = $("#client\\.vpnid").find('option:selected').text();
+                        $('tr[id="row_client.description"]').addClass('hidden');
+                        $("#client\\.description").val(opt);
+                        $("#client\\.description").selectpicker('refresh');
+                    });
+                    // Get what is in the table and remove items
+                    ajaxGet('/api/multihop/settings/searchItem/', {}, function(data, status){
+                        $.each(data.rows, function (idx, record) {
+                            $('select').children('option[value=' + record.vpnid + ']').remove();
+                            $("#client\\.vpnid").selectpicker('refresh');
+                            $("#client\\.description").selectpicker('refresh');
+                            // Set client description again
+                            var opt = $("#client\\.vpnid").find('option:selected').text();
+                            $('tr[id="row_client.description"]').addClass('hidden');
+                            $("#client\\.description").val(opt);
+                            $("#client\\.description").selectpicker('refresh');
+                        });
+                    });
+                    return response;
+                }
             }
-        );
-
-        //  Get active opnvpn clients and create a select list
-        ajaxGet('/api/multihop/settings/getActiveClients/', {}, function(data, status){
-            $.each(data, function (idx, record) {
-                var client_vpnid=$("<option/>").val(record.vpnid).text(record.description);
-                client_vpnid.data('presets', record);
-                $("#client\\.vpnid").append(client_vpnid);
-            });
-
-            // Initial set of "client.description" field
-            var opt = $("#client\\.vpnid").find('option:selected').text();
-            $('tr[id="row_client.description"]').addClass('hidden');
-            $("#client\\.description").val(opt);
-            $("#client\\.vpnid").selectpicker('refresh');
         });
 
-        // Change the value of "client.description" to new on change of option
-        $(document).on('change', 'select', function() {
-            var opt = $(this).find('option:selected').text();
-            $("#client\\.description").val(opt);
-        });
+    $(document).on('change', 'select', function() {
+        var opt = $(this).find('option:selected').text();
+        $("#client\\.description").val(opt);
+        $("#client\\.description").selectpicker('refresh');
 
-
-        $("#reconfigureAct").SimpleActionButton({
-            onPreAction: function() {
-                const dfObj = new $.Deferred();
-                saveFormToEndpoint("/api/multihop/settings/set", 'frm_general_settings', function(){
-                    dfObj.resolve();
-                });
-                return dfObj;
-            }
-        });
-
-        updateServiceControlUI('multihop');
-
-        let data_get_map = {'frm_general_settings':"/api/multihop/settings/get"};
-        mapDataToFormUI(data_get_map).done(function(data){
-            formatTokenizersUI();
-            $('.selectpicker').selectpicker('refresh');
-        });
     });
+
+    $("#reconfigureAct").SimpleActionButton({
+        onPreAction: function() {
+            const dfObj = new $.Deferred();
+            saveFormToEndpoint("/api/multihop/settings/set", 'frm_general_settings', function(){
+                dfObj.resolve();
+            });
+            return dfObj;
+        }
+    });
+
+    updateServiceControlUI('multihop');
+
+    let data_get_map = {'frm_general_settings':"/api/multihop/settings/get"};
+    mapDataToFormUI(data_get_map).done(function(data){
+    formatTokenizersUI();
+    $('.selectpicker').selectpicker('refresh');
+    });
+});
 
 </script>
 
