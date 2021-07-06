@@ -28,6 +28,7 @@
 VPNID=$(pluginctl -g OPNsense.multihop | jq -r '.[].client[]? | .vpnid')
 ROUTE=$(pluginctl -g OPNsense.multihop | jq -r '.general.setroute')
 AUTO=$(pluginctl -g OPNsense.multihop | jq -r '.general.autorestart')
+INET6=$(pluginctl -g OPNsense.multihop | jq -r '.general.inet6')
 DFL_ROUTE=$(netstat -4nr | grep default | awk '{ print $2}')
 HOPS=$(echo $VPNID | wc -w)
 COUNT=1
@@ -118,6 +119,10 @@ else
         func_addroute $IP
     fi
 
+    if [ $INET6 -eq 1 ]; then
+        NET6='--redirect-gateway ipv6'
+    fi
+
     #Bring up the tunnels
 
     for HOP in $VPNID
@@ -140,6 +145,7 @@ else
         # before we check the status
 
         sleep 5;
+
         echo "state all" | \
             nc -N -U /var/etc/openvpn/client$HOP.sock | \
             grep CONNECTED  > /dev/null
@@ -149,14 +155,13 @@ else
             func_stop
         fi
     else
-
         #Start last tunnel
         openvpn --config /var/etc/openvpn/client$HOP.conf \
             --route-nopull \
-            --redirect-gateway ipv6 \
-            --redirect-gateway def1
+            --redirect-gateway def1 \
+            $NET6
 
-                    sleep 5;
+        sleep 5;
 
                     echo "state all" | \
                         nc -N -U /var/etc/openvpn/client$HOP.sock | \
@@ -174,14 +179,14 @@ else
 
     if [ $AUTO -eq 1 ]; then
         DPING=$(netstat -4nr | grep ovpnc | grep UGS | \
-        awk '{ print $2 }' | sort -u)
+            awk '{ print $2 }' | sort -u)
 
-      for GW in $DPING
-       do 
-        dpinger -o /dev/null -S -L 35% \
-        -C "/usr/local/opnsense/scripts/OPNsense/Multihop/multihop.sh restart" \
-        -p /var/run/dpinger-multihop-`echo $GW | sed 's/\./-/g'`.pid $GW
-       done
+        for GW in $DPING
+        do 
+            dpinger -o /dev/null -S -L 35% \
+                -C "/usr/local/opnsense/scripts/OPNsense/Multihop/multihop.sh restart" \
+                -p /var/run/dpinger-multihop-`echo $GW | sed 's/\./-/g'`.pid $GW
+            done
     fi
 fi
 #End Tunnel Function
@@ -190,13 +195,13 @@ fi
 
 case $1 in
     start)  func_start
-            func_check
+        func_check
         ;;
     stop)   func_stop
         ;;
     restart) func_stop
-            func_start
-            func_check
+        func_start
+        func_check
         ;;
     status) func_check
         ;;

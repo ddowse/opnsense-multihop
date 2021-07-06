@@ -1,5 +1,3 @@
-#  _Advanced Users only_
-
 # openvpn-multihop
 Multihop with OpenVPN Tunnels on OPNsense
 
@@ -8,7 +6,7 @@ Multihop with OpenVPN Tunnels on OPNsense
 Check if your provider supports this. [Perfect Privacy](https://www.perfect-privacy.com/en/features/multi-hop-vpn) is known to support at least 4 Tunnel.   
 
 
-Build Instructions
+# Build Instructions
 
 ``` bash
 git clone https://github.com/opnsense/plugins

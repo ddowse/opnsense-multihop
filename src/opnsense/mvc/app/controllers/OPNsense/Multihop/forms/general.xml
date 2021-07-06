@@ -18,4 +18,11 @@
         <help>If unchecked no static route entry will be added. Use only if you know what you are doing.</help>
         <advanced>true</advanced>
     </field>
+    <field>
+        <id>multihop.general.inet6</id>
+        <label>Enable IPv6</label>
+        <type>checkbox</type>
+        <help>If unchecked IP6 Traffice will not be routed trough tunnels</help>
+        <advanced>true</advanced>
+    </field>
 </form>
